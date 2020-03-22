@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash -x
 
 # baord
 declare -a board
@@ -14,3 +14,6 @@ do
 	done
 		printf "|\n-------------\n"
 done
+
+player="O"
+computer="X"
