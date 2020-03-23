@@ -46,3 +46,4 @@ else
 	echo "computer"
 fi
 
+displayBoard
