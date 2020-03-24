@@ -152,7 +152,8 @@ function assignPriorityPosition(){
 }
 
 function computerPriorityMove() {
-	#Take corners
+	
+	#Take corners if avalible
 	for (( row=0; row<$BOARD_SIZE; $((row+=2)) ))
 	do
 		for (( column=0; column<$BOARD_SIZE; $((column+=2)) ))
@@ -163,6 +164,12 @@ function computerPriorityMove() {
 			fi
 		done
 	done
+
+	#Take Centre 
+	if [ $counter -eq $COUNTER ]
+	then
+		assignPriorityPosition $1 $(($BOARD_SIZE/2+1)) $(($BOARD_SIZE/2+1))
+	fi
 }
 
 function playerMove() {
