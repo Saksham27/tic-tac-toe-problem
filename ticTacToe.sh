@@ -9,10 +9,14 @@ PLAYER_FIRST_MOVE=1  # so COMPUTER_FIRST_MOVE will be 0
 NO_WINNER="N"
 EMPTY_BLOCK="."
 COUNTER=1
+CONTINUE_GAME=1
+STOP_GAME=0
 
 # variables
 winner="N"
 chance=1
+userChoice=0
+game=1
 
 # baord
 declare -A board
@@ -20,7 +24,7 @@ declare -A board
 # fucntion toss for deciding who will start the game
 function toss() {
 	temp=$((RANDOM%2))
-	if [ $temp -eq 1 ]
+	if [ $temp -eq $PLAYER_FIRST_MOVE ]
 	then
 		echo "player"
 	else
@@ -118,7 +122,9 @@ function checkWinningMove() {
 				then
 					displayBoard
 					echo $winner wins the game !!!!
-					exit
+					game=$STOP_GAME
+					counter=0
+					break
 				elif [ $winner = "player" ]
 				then
 					board[$row,$column]=$COMPUTER
@@ -185,22 +191,27 @@ function computerPriorityMove() {
 
 # fucntion for player move
 function playerMove() {
-	read -p "Enter where you want to play your move : " pos
-	if [ $(($pos%$BOARD_SIZE)) -eq 0 ]
+	read -p "Enter position where you want to play your move form 1 to 9 : " pos
+	if [ $pos -ge 1 ] && [ $pos -le 9 ]
 	then
-		col=$(($BOARD_SIZE-1))
-	else
-		col=$(($pos%$BOARD_SIZE-1))
-	fi
-
-	row=$((($pos-1)/$BOARD_SIZE))
-	echo $row,$col
-	if [ ${board[$row,$col]} = $EMPTY_BLOCK ]
-	then
-		board[$row,$col]=$PLAYER
-		((chance++))
+		if [ $(($pos%$BOARD_SIZE)) -eq 0 ]
+		then
+			col=$(($BOARD_SIZE-1))
 		else
-		echo "worng move, please play a valid move and enter a free block position."
+			col=$(($pos%$BOARD_SIZE-1))
+		fi
+
+		row=$((($pos-1)/$BOARD_SIZE))
+		if [ ${board[$row,$col]} = $EMPTY_BLOCK ]
+		then
+			board[$row,$col]=$PLAYER
+			((chance++))
+			else
+			echo "worng move, please play a valid move and enter a free block position."
+			playerMove
+		fi
+	else
+		echo "Enter valid position please"
 		playerMove
 	fi
 }
@@ -210,52 +221,84 @@ function playerMove() {
 
 #start the game
 
-resetBoard
+while [ $game -eq $CONTINUE_GAME ]
+do 
+	resetBoard
 
-tossResult=$( toss )
-count=1
-for (( i=0; i<$BOARD_SIZE; i++ ))
-do
-	for (( j=0; j<$BOARD_SIZE; j++ ))
+	tossResult=$( toss )
+	count=1
+	for (( i=0; i<$BOARD_SIZE; i++ ))
 	do
-		printf "| $count "
-		((count++))
+		for (( j=0; j<$BOARD_SIZE; j++ ))
+		do
+			printf "| $count "
+			((count++))
+		done
+			printf "|\n-------------\n"
 	done
-		printf "|\n-------------\n"
-done
 
-while [ $chance -le $(($BOARD_SIZE*$BOARD_SIZE)) ]
-do
+	while [ $chance -le $(($BOARD_SIZE*$BOARD_SIZE)) ]
+	do
 
-	if [ $tossResult = "player" ]
-	then
-		"$tossResult"Move
-		displayBoard
-		tossResult="computer"
-		checkWin
-	else
-		printf "\nComputer chance !!!\n"
-		checkWinningMove $COMPUTER
-		checkWinningMove $PLAYER
-		if [ $counter -eq $COUNTER ]
+		if [ $tossResult = "player" ]
 		then
-			"$tossResult"PriorityMove $COMPUTER
+			"$tossResult"Move
 			displayBoard
-			tossResult="player"
+			tossResult="computer"
+			checkWin
+		else
+			printf "\nComputer chance !!!\n"
+			checkWinningMove $COMPUTER
+			if [ $game -eq $CONTINUE_GAME ]
+			then
+				checkWinningMove $PLAYER
+				if [ $counter -eq $COUNTER ]
+				then
+					"$tossResult"PriorityMove $COMPUTER
+					displayBoard
+					tossResult="player"
+				fi
+			else
+				break
+			fi
 		fi
-	fi
 
-	if [ $winner = $NO_WINNER ]
+		if [ $winner = $NO_WINNER ]
+		then
+			continue
+		else
+			displayBoard
+			echo $winner wins the game
+			break
+		fi	
+
+	done
+
+	if [ $winner = $NO_WINNER ] 
 	then
-		continue
-	else
-		displayBoard
-		echo $winner wins the game
-		 break
+		echo draw
 	fi
-done
 
-if [ $winner = $NO_WINNER ] 
-then
-	echo draw
-fi
+	echo "Do you want to play again ?"
+	echo "Press 1 to play again"
+	echo "Press 2 to stop playin and get out"
+	read userChoice
+	
+	case $userChoice in
+		1)
+			game=$CONTINUE_GAME
+			counter=1
+			chance=1
+			winner=$NO_WINNER
+			;;
+		2)
+			echo "Thanks for playin. Hope you enjoyed !!!"
+			game=$STOP_GAME
+			;;
+		*)
+			game=$CONTINUE_GAME
+			counter=1
+			chance=1
+			winner=$NO_WINNER
+	esac
+done
