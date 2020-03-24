@@ -39,6 +39,7 @@ function resetBoard() {
 
 # fucntion to display the board
 function displayBoard() {
+	printf "Board\n"
 	for (( i=0; i<$BOARD_SIZE; i++ ))
 	do
 		for (( j=0; j<$BOARD_SIZE; j++ ))
@@ -87,7 +88,6 @@ function checkWin() {
 	then
 		if [ ${board[0,0]} = ${board[1,1]} ] && [ ${board[0,0]} = ${board[2,2]} ] && [ ${board[0,0]} != $EMPTY_BLOCK ] # [0,0],[1,1],[2,2]
 		then
-			echo right to left corner
 			winner=$( declareWinner ${board[0,0]} )
 		fi
 	fi
@@ -96,7 +96,6 @@ function checkWin() {
 	then
 		if [ ${board[0,2]} = ${board[1,1]} ] && [ ${board[0,2]} = ${board[2,0]} ] && [ ${board[0,2]} != $EMPTY_BLOCK ]
 		then
-			echo left to right cornwe
 			winner=$( declareWinner ${board[0,2]} )
 		fi
 	fi	
@@ -115,6 +114,7 @@ function checkWinningMove() {
 				checkWin
 				if [ $winner = "computer" ]
 				then
+					displayBoard
 					echo $winner wins the game !!!!
 					exit
 				elif [ $winner = "player" ]
@@ -123,6 +123,8 @@ function checkWinningMove() {
 					((chance++))
 					counter=0
 					winner=$NO_WINNER
+					displayBoard
+					tossResult="player"
 					break
 				elif [ $winner = $NO_WINNER ]
 				then 
@@ -137,6 +139,31 @@ function checkWinningMove() {
 	done
 }
 
+function assignPriorityPosition(){
+	if [ $counter -eq $COUNTER ]
+	then
+		if [ ${board[$2,$3]} == "." ]
+		then
+			board[$2,$3]=$1
+			((chance++))
+			counter=0
+		fi
+	fi
+}
+
+function computerPriorityMove() {
+	#Take corners
+	for (( row=0; row<$BOARD_SIZE; $((row+=2)) ))
+	do
+		for (( column=0; column<$BOARD_SIZE; $((column+=2)) ))
+		do
+			if [ $counter -eq $COUNTER ]
+			then
+				assignPriorityPosition $1 $row $column
+			fi
+		done
+	done
+}
 
 function playerMove() {
 	read -p "Enter where you want to play your move : " pos
@@ -202,19 +229,21 @@ done
 
 while [ $chance -le $(($BOARD_SIZE*$BOARD_SIZE)) ]
 do
-	displayBoard
 
 	if [ $tossResult = "player" ]
 	then
 		"$tossResult"Move
+		displayBoard
 		tossResult="computer"
 		checkWin
 	else
+		printf "\nComputer chance !!!\n"
 		checkWinningMove $COMPUTER
 		checkWinningMove $PLAYER
 		if [ $counter -eq $COUNTER ]
 		then
-			"$tossResult"Move
+			"$tossResult"PriorityMove $COMPUTER
+			displayBoard
 			tossResult="player"
 		fi
 	fi
@@ -223,6 +252,7 @@ do
 	then
 		continue
 	else
+		displayBoard
 		echo $winner wins the game
 		 break
 	fi
