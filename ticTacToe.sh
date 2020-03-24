@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # constants
 BOARD_SIZE=3
@@ -70,14 +70,12 @@ function checkWin() {
 		do
 			if [ ${board[$i,0]} = ${board[$i,1]} ] && [ ${board[$i,0]} = ${board[$i,2]} ] && [ ${board[$i,0]} != $EMPTY_BLOCK ] && [ ${board[$i,1]} != $EMPTY_BLOCK ] && [ ${board[$i,2]} != $EMPTY_BLOCK ] # [0,0],[0,1],[0,2]  [1,0],[1,1],[1,2]  [2,0],[2,1],[2,2]
 			then
-				echo horizontal
 				winner=$( declareWinner ${board[$i,1]} )
 				break
 			fi
 
 			if [ ${board[0,$i]} = ${board[1,$i]} ] && [ ${board[0,$i]} = ${board[2,$i]} ] && [ ${board[0,$i]} != $EMPTY_BLOCK ] && [ ${board[1,$i]} != $EMPTY_BLOCK ] && [ ${board[2,$i]} != $EMPTY_BLOCK ] # [0,0],[1,0],[2,0]  [0,1],[1,1],[2,1]  [0,2],[1,2],[2,2]
 			then
-				echo vertical
 				winner=$( declareWinner ${board[0,$i]} )
 				break
 			fi
@@ -101,6 +99,30 @@ function checkWin() {
 			winner=$( declareWinner ${board[0,2]} )
 		fi
 	fi	
+}
+
+# function to check winning move
+function checkWinningMove() {
+	counter=1;
+	for (( row=0; row<$BOARD_SIZE; row++ ))
+	do
+		for (( column=0; column<$BOARD_SIZE; column++ ))
+		do
+			if [ ${board[$row,$column]} = $EMPTY_BLOCK ]
+			then
+				board[$row,$column]=$1
+				checkWin
+				if [ $winner = $NO_WINNER ]
+				then 
+					board[$row,$column]=$EMPTY_BLOCK
+				elif [ $winner = "computer" ]
+				then
+					echo $winner wins the game !!!!
+					exit
+				fi
+			fi
+		done
+	done
 }
 
 
@@ -168,15 +190,16 @@ done
 
 while [ $chance -le $(($BOARD_SIZE*$BOARD_SIZE)) ]
 do
-	echo Hi
 	displayBoard
-
-	"$tossResult"Move
 
 	if [ $tossResult = "player" ]
 	then
+		"$tossResult"Move
 		tossResult="computer"
+		echo heello
 	else
+		checkWinningMove $COMPUTER
+		"$tossResult"Move
 		tossResult="player"
 	fi
 
