@@ -9,9 +9,11 @@ PLAYER_FIRST_MOVE=1  # so COMPUTER_FIRST_MOVE will be 0
 NO_WINNER="N"
 EMPTY_BLOCK="."
 COUNTER=1
+
 # variables
 winner="N"
 chance=1
+
 # baord
 declare -A board
 
@@ -32,7 +34,7 @@ function resetBoard() {
 	do
 		for (( j=0; j<$BOARD_SIZE; j++ ))
 		do
-			board[$i,$j]="."
+			board[$i,$j]=$EMPTY_BLOCK
 		done
 	done
 }
@@ -61,7 +63,7 @@ function declareWinner() {
 	fi
 }
 
-# function to check win , tie or next move
+# function to check winner  MAIN LOGIC
 # 1 2 3
 # 4 5 6
 # 7 8 9
@@ -152,7 +154,6 @@ function assignPriorityPosition(){
 }
 
 function computerPriorityMove() {
-	
 	#Take corners if avalible
 	for (( row=0; row<$BOARD_SIZE; $((row+=2)) ))
 	do
@@ -165,13 +166,24 @@ function computerPriorityMove() {
 		done
 	done
 
-	#Take Centre 
+	#Take Centre if availible
 	if [ $counter -eq $COUNTER ]
 	then
-		assignPriorityPosition $1 $(($BOARD_SIZE/2+1)) $(($BOARD_SIZE/2+1))
+		assignPriorityPosition $1 $(($BOARD_SIZE/2)) $(($BOARD_SIZE/2))
 	fi
+
+	# finally Take sides left
+		for (( row=0; row<$BOARD_SIZE;row++ ))
+		do
+			for (( column=0; column<$BOARD_SIZE; column++ ))
+			do
+				assignPriorityPosition $1 $row $column
+			done
+		done
 }
 
+
+# fucntion for player move
 function playerMove() {
 	read -p "Enter where you want to play your move : " pos
 	if [ $(($pos%$BOARD_SIZE)) -eq 0 ]
@@ -190,28 +202,6 @@ function playerMove() {
 		else
 		echo "worng move, please play a valid move and enter a free block position."
 		playerMove
-	fi
-}
-
-function computerMove() {
-	printf "\nComputer chance !!!\n"
-	pos=$((RANDOM%9+1))
-	if [ $(($pos%$BOARD_SIZE)) -eq 0 ]
-	then
-		col=$(($BOARD_SIZE-1))
-	else
-		col=$(($pos%$BOARD_SIZE-1))
-	fi
-
-	row=$((($pos-1)/$BOARD_SIZE))
-
-	if [ ${board[$row,$col]} = "." ]
-	then
-		board[$row,$col]=$COMPUTER
-		((chance++))
-		else
-		echo "worng move, please play a valid move and enter a free block position."
-		computerMove
 	fi
 }
 
