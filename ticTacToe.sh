@@ -8,6 +8,7 @@ COUNT=1
 PLAYER_FIRST_MOVE=1  # so COMPUTER_FIRST_MOVE will be 0
 NO_WINNER="N"
 EMPTY_BLOCK="."
+COUNTER=1
 # variables
 winner="N"
 chance=1
@@ -103,7 +104,7 @@ function checkWin() {
 
 # function to check winning move
 function checkWinningMove() {
-	counter=1;
+	counter=1
 	for (( row=0; row<$BOARD_SIZE; row++ ))
 	do
 		for (( column=0; column<$BOARD_SIZE; column++ ))
@@ -112,16 +113,27 @@ function checkWinningMove() {
 			then
 				board[$row,$column]=$1
 				checkWin
-				if [ $winner = $NO_WINNER ]
-				then 
-					board[$row,$column]=$EMPTY_BLOCK
-				elif [ $winner = "computer" ]
+				if [ $winner = "computer" ]
 				then
 					echo $winner wins the game !!!!
 					exit
+				elif [ $winner = "player" ]
+				then
+					board[$row,$column]=$COMPUTER
+					((chance++))
+					counter=0
+					winner=$NO_WINNER
+					break
+				elif [ $winner = $NO_WINNER ]
+				then 
+					board[$row,$column]=$EMPTY_BLOCK
 				fi
 			fi
 		done
+	if [ $counter -eq 0 ] 
+	then
+		break
+	fi
 	done
 }
 
@@ -196,14 +208,16 @@ do
 	then
 		"$tossResult"Move
 		tossResult="computer"
-		echo heello
+		checkWin
 	else
 		checkWinningMove $COMPUTER
-		"$tossResult"Move
-		tossResult="player"
+		checkWinningMove $PLAYER
+		if [ $counter -eq $COUNTER ]
+		then
+			"$tossResult"Move
+			tossResult="player"
+		fi
 	fi
-
-	 checkWin
 
 	if [ $winner = $NO_WINNER ]
 	then
