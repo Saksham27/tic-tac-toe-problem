@@ -6,11 +6,11 @@ PLAYER="O"
 COMPUTER="X"
 COUNT=1
 PLAYER_FIRST_MOVE=1  # so COMPUTER_FIRST_MOVE will be 0
-NO_WINNER=0
+NO_WINNER="N"
+EMPTY_BLOCK="."
 # variables
-winner=0
+winner="N"
 chance=1
-
 # baord
 declare -A board
 
@@ -27,13 +27,11 @@ function toss() {
 
 # function reset the board
 function resetBoard() {
-	count=$COUNT
 	for (( i=0; i<$BOARD_SIZE; i++ ))
 	do
 		for (( j=0; j<$BOARD_SIZE; j++ ))
 		do
 			board[$i,$j]="."
-			((count++))
 		done
 	done
 }
@@ -50,66 +48,10 @@ function displayBoard() {
 	done
 }
 
-# function to check win , tie or next move
-# 1 2 3
-# 4 5 6
-# 7 8 9
-function checkWin() {
-	if [ $winner -eq $NO_WINNRER ]
-	then
-		for (( i=0; i<$BOARD_SIZE; i++ ))
-		do
-			if [ ${board[i,0]} -eq ${board[i,1]} ] && [ ${board[i,0]} -eq ${board[i,2]} ] # [0,0],[0,1],[0,2]  [1,0],[1,1],[1,2]  [2,0],[2,1],[2,2]
-			then
-				echo $( declareWinner ${board[i,1]} )
-				break
-			fi
 
-			if [ ${board[0,i]} -eq ${board[1,i]} ] && [ ${board[0,i]} -eq ${board[2,i]} ] # [0,0],[1,0],[2,0]  [0,1],[1,1],[2,1]  [0,2],[1,2],[2,2]
-			then
-				echo $( declareWinner ${board[0,i]} )
-				break
-			fi
-		done
-	fi
-
-	if [ $winner -eq $NO_WINNER ]
-	then
-		for (( i=1; i<$BOARD_SIZE; i++ )) # [0,0],[1,1],[2,2]
-		do
-			if [ ${board[0,0]} -eq ${board[$i,$i]} ]
-			then
-				continue
-			else
-				break
-			fi
-			if [ $(($i+1)) -eq $BOARD_SIZE ]
-			then
-				echo $( declareWinner ${board[0,0]} )
-			fi
-		done
-	fi
-
-	if [ $winner -eq $NO_WINNER ]
-	then
-		for (( i=1; i<$BOARD_SIZE; i++ )) # [0,2],[1,1],[2,0]
-		do
-			if [ ${board[0,2]} -eq  ${board[$i,$(($i%2))]} ]
-			then
-				continue
-			else
-				break
-			fi
-			if [ $(($i+1)) -eq $BOARD_SIZE ]
-			then
-				echo $( declareWinner ${board[0,2]} )
-			fi
-		done
-	fi	
-}
-
+# function to declare the winner
 function declareWinner() {
-	if [ $1 -eq $PLAYER ]
+	if [ $1 = $PLAYER ]
 	then
 		echo player
 	else
@@ -117,24 +59,91 @@ function declareWinner() {
 	fi
 }
 
+# function to check win , tie or next move
+# 1 2 3
+# 4 5 6
+# 7 8 9
+function checkWin() {
+	if [ $winner = $NO_WINNER ]
+	then
+		for (( i=0; i<$BOARD_SIZE; i++ ))
+		do
+			if [ ${board[$i,0]} = ${board[$i,1]} ] && [ ${board[$i,0]} = ${board[$i,2]} ] && [ ${board[$i,0]} != $EMPTY_BLOCK ] && [ ${board[$i,1]} != $EMPTY_BLOCK ] && [ ${board[$i,2]} != $EMPTY_BLOCK ] # [0,0],[0,1],[0,2]  [1,0],[1,1],[1,2]  [2,0],[2,1],[2,2]
+			then
+				echo horizontal
+				winner=$( declareWinner ${board[$i,1]} )
+				break
+			fi
+
+			if [ ${board[0,$i]} = ${board[1,$i]} ] && [ ${board[0,$i]} = ${board[2,$i]} ] && [ ${board[0,$i]} != $EMPTY_BLOCK ] && [ ${board[1,$i]} != $EMPTY_BLOCK ] && [ ${board[2,$i]} != $EMPTY_BLOCK ] # [0,0],[1,0],[2,0]  [0,1],[1,1],[2,1]  [0,2],[1,2],[2,2]
+			then
+				echo vertical
+				winner=$( declareWinner ${board[0,$i]} )
+				break
+			fi
+		done
+	fi
+
+	if [ $winner = $NO_WINNER ]
+	then
+		if [ ${board[0,0]} = ${board[1,1]} ] && [ ${board[0,0]} = ${board[2,2]} ] && [ ${board[0,0]} != $EMPTY_BLOCK ] # [0,0],[1,1],[2,2]
+		then
+			echo right to left corner
+			winner=$( declareWinner ${board[0,0]} )
+		fi
+	fi
+
+	if [ $winner = $NO_WINNER ]
+	then
+		if [ ${board[0,2]} = ${board[1,1]} ] && [ ${board[0,2]} = ${board[2,0]} ] && [ ${board[0,2]} != $EMPTY_BLOCK ]
+		then
+			echo left to right cornwe
+			winner=$( declareWinner ${board[0,2]} )
+		fi
+	fi	
+}
+
+
 function playerMove() {
 	read -p "Enter where you want to play your move : " pos
 	if [ $(($pos%$BOARD_SIZE)) -eq 0 ]
 	then
 		col=$(($BOARD_SIZE-1))
 	else
-		col=$(($pos%$BOARD_SIZE))
+		col=$(($pos%$BOARD_SIZE-1))
 	fi
 
 	row=$((($pos-1)/$BOARD_SIZE))
-
-	if [ ${board[$row.$column]} = "." ]
+	echo $row,$col
+	if [ ${board[$row,$col]} = $EMPTY_BLOCK ]
 	then
-		board[$row.$column]=$PLAYER
+		board[$row,$col]=$PLAYER
 		((chance++))
 		else
 		echo "worng move, please play a valid move and enter a free block position."
 		playerMove
+	fi
+}
+
+function computerMove() {
+	printf "\nComputer chance !!!\n"
+	pos=$((RANDOM%9+1))
+	if [ $(($pos%$BOARD_SIZE)) -eq 0 ]
+	then
+		col=$(($BOARD_SIZE-1))
+	else
+		col=$(($pos%$BOARD_SIZE-1))
+	fi
+
+	row=$((($pos-1)/$BOARD_SIZE))
+
+	if [ ${board[$row,$col]} = "." ]
+	then
+		board[$row,$col]=$COMPUTER
+		((chance++))
+		else
+		echo "worng move, please play a valid move and enter a free block position."
+		computerMove
 	fi
 }
 
@@ -159,17 +168,30 @@ done
 
 while [ $chance -le $(($BOARD_SIZE*$BOARD_SIZE)) ]
 do
-	
+	echo Hi
 	displayBoard
 
 	"$tossResult"Move
 
-	winner=$( checkWin ${board[@]} )
+	if [ $tossResult = "player" ]
+	then
+		tossResult="computer"
+	else
+		tossResult="player"
+	fi
 
-	if [ $winner -eq $NO_WINNER ]
+	 checkWin
+
+	if [ $winner = $NO_WINNER ]
 	then
 		continue
 	else
+		echo $winner wins the game
 		 break
 	fi
 done
+
+if [ $winner = $NO_WINNER ] 
+then
+	echo draw
+fi
