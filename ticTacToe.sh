@@ -88,23 +88,17 @@ function checkWin() {
 				break
 			fi
 		done
-	fi
 
-	if [ $winner = $NO_WINNER ]
-	then
 		if [ ${board[0,0]} = ${board[1,1]} ] && [ ${board[0,0]} = ${board[2,2]} ] && [ ${board[0,0]} != $EMPTY_BLOCK ] # [0,0],[1,1],[2,2]
 		then
 			winner=$( declareWinner ${board[0,0]} )
 		fi
-	fi
 
-	if [ $winner = $NO_WINNER ]
-	then
 		if [ ${board[0,2]} = ${board[1,1]} ] && [ ${board[0,2]} = ${board[2,0]} ] && [ ${board[0,2]} != $EMPTY_BLOCK ]
 		then
 			winner=$( declareWinner ${board[0,2]} )
 		fi
-	fi	
+	fi
 }
 
 # function to check winning move
@@ -159,7 +153,10 @@ function assignPriorityPosition(){
 	fi
 }
 
+
+# fucntion for computer move
 function computerPriorityMove() {
+
 	#Take corners if avalible
 	for (( row=0; row<$BOARD_SIZE; $((row+=2)) ))
 	do
@@ -179,13 +176,13 @@ function computerPriorityMove() {
 	fi
 
 	# finally Take sides left
-		for (( row=0; row<$BOARD_SIZE;row++ ))
+	for (( row=0; row<$BOARD_SIZE;row++ ))
+	do
+		for (( column=0; column<$BOARD_SIZE; column++ ))
 		do
-			for (( column=0; column<$BOARD_SIZE; column++ ))
-			do
-				assignPriorityPosition $1 $row $column
-			done
+			assignPriorityPosition $1 $row $column
 		done
+	done
 }
 
 
@@ -223,9 +220,9 @@ function playerMove() {
 
 while [ $game -eq $CONTINUE_GAME ]
 do 
-	resetBoard
+	resetBoard # resetting the baord at game start
 
-	tossResult=$( toss )
+	tossResult=$( toss ) # doing the toss
 	count=1
 	for (( i=0; i<$BOARD_SIZE; i++ ))
 	do
@@ -237,25 +234,26 @@ do
 			printf "|\n-------------\n"
 	done
 
+	 # playin the game till a block is empty on board or someone wins
 	while [ $chance -le $(($BOARD_SIZE*$BOARD_SIZE)) ]
 	do
 
 		if [ $tossResult = "player" ]
 		then
-			"$tossResult"Move
-			displayBoard
+			"$tossResult"Move # player move
+			displayBoard # displayin the board
 			tossResult="computer"
-			checkWin
+			checkWin # checking if anyone winning
 		else
 			printf "\nComputer chance !!!\n"
-			checkWinningMove $COMPUTER
+			checkWinningMove $COMPUTER # computer searching for a move where it can win
 			if [ $game -eq $CONTINUE_GAME ]
 			then
-				checkWinningMove $PLAYER
+				checkWinningMove $PLAYER # computer looking if player wins in next move, if yes then block
 				if [ $counter -eq $COUNTER ]
 				then
-					"$tossResult"PriorityMove $COMPUTER
-					displayBoard
+					"$tossResult"PriorityMove $COMPUTER # computer move
+					displayBoard # displayin board
 					tossResult="player"
 				fi
 			else
@@ -274,16 +272,18 @@ do
 
 	done
 
+	# if no winner till now the game is a draw
 	if [ $winner = $NO_WINNER ] 
 	then
 		echo draw
 	fi
 
+	# At the game end asking the user if he wants to play again or exit the game
 	echo "Do you want to play again ?"
 	echo "Press 1 to play again"
-	echo "Press 2 to stop playin and get out"
+	echo "Press any other key to stop playin and get out"
 	read userChoice
-	
+
 	case $userChoice in
 		1)
 			game=$CONTINUE_GAME
@@ -291,14 +291,8 @@ do
 			chance=1
 			winner=$NO_WINNER
 			;;
-		2)
+		*)
 			echo "Thanks for playin. Hope you enjoyed !!!"
 			game=$STOP_GAME
-			;;
-		*)
-			game=$CONTINUE_GAME
-			counter=1
-			chance=1
-			winner=$NO_WINNER
 	esac
 done
